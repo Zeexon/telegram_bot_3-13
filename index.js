@@ -1,9 +1,9 @@
-//CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT CLIENT
-
+//SERVER SERVER SERVER SERVER SERVER SERVER SERVER
 
 const TelegramBot = require('node-telegram-bot-api');
 const config = require('config');
-const express = require('express')
+const express = require('express');
+const bodyParser = require('body-parser')
 const app = express()
 
 const token = config.get('TELEGRAM_TOKEN');
@@ -45,6 +45,18 @@ bot.on('message', async (msg) => {
 app.get('/getChatId', (req,res) => {
     res.json({chatId})
 })
+
+app.post('/inmess', (req, res) => {
+    const { title, price } = req.body;
+  
+    console.log('Received data from the website:', { title, price });
+  
+    // Process the incoming data as needed
+    // ...
+  
+    // Send a response back to the website if necessary
+    res.json({ success: true });
+});
 
 bot.on('callback_query', async (msg) => {
     const buttonData = msg.data; // Use msg.data instead of msg.callbackQuery.data
