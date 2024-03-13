@@ -7,13 +7,15 @@ const bodyParser = require('body-parser')
 const app = express()
 
 const token = config.get('TELEGRAM_TOKEN');
+let chatId;
 let calcFlag = false;
 let findItemFlag = false;
+let orderButtonData = {title:'',price:''}
 
 const bot = new TelegramBot(token, { polling: true });
 
 bot.on('message', async (msg) => {
-    const chatId = msg.chat.id;
+    chatId = msg.chat.id;
     const text = msg.text;
 
     if (text === '/start') {
@@ -48,6 +50,18 @@ app.get('/getChatId', (req,res) => {
 
 app.post('/inmess', (req, res) => {
     const { title, price } = req.body;
+    orderButtonData = {title:title, price:price}
+
+    bot.sendMessage(chatId, `Received data:\nTitle: ${title}\nPrice: ${price}`)
+    .then(() => {
+      console.log('Message sent successfully');
+      res.json({ success: true });
+    })
+    .catch((error) => {
+      console.error('Error sending message:', error);
+      res.status(500).json({ success: false, error: 'Failed to send message' });
+    });
+
   
     console.log('Received data from the website:', { title, price });
   
