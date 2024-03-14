@@ -42,6 +42,15 @@ bot.on('message', async (msg) => {
         await bot.sendMessage(chatId, messageNumber.toFixed(2) + ' CNY');
         calcFlag = false;
     }
+    if(msg?.web_app_data?.data){
+        try{
+            const data = JSON.parse(msg?.web_app_data?.data)
+            await  bot.sendMessage(chatId, data.title)
+        } catch (e) {
+            console.log(e)
+        }
+
+    }
 });
 
 app.get('/getChatId', (req,res) => {
