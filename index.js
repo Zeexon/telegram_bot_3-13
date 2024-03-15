@@ -1,10 +1,9 @@
-//SERVER SERVER SERVER SERVER SERVER SERVER SERVER
 
 const TelegramBot = require('node-telegram-bot-api');
 const config = require('config');
 const express = require('express');
-const bodyParser = require('body-parser')
-const app = express()
+const app = express();
+const webAppUrl = 'https://total-geek.ru'
 
 const token = config.get('TELEGRAM_TOKEN');
 let chatId;
@@ -18,15 +17,27 @@ bot.on('message', async (msg) => {
     chatId = msg.chat.id;
     const text = msg.text;
 
+    switch (text) {
+        case 'Рассчитать RUB --> CNY':
+            await bot.sendMessage(msg.from.id, 'Введите сумму в RUB \u2192');
+            await bot.sendMessage(msg.from.id, 'Формула здесь-->');
+            calcFlag = true;
+            break;
+        default:
+            break;
+    }
+
     if (text === '/start') {
-        await bot.sendMessage(chatId, 'Привет, это Rain Zone Bot!\nПомогу подобрать одежду и рассчитать стоимость из RUB в CNY, выбери, чем я могу тебе помочь!\nPS: Если тебя интересует наш полный каталог, то жми зеленую кнопку "САЙТ" ниже', {
+        await bot.sendMessage(chatId, 'Привет, это Rain Zone Bot!\nПомогу подобрать одежду и рассчитать стоимость из RUB в CNY, выбери, чем я могу тебе помочь!\nPS: Если тебя интересует наш полный каталог, то жми большую кнопку "ОФОРМИТЬ ЗАКАЗ" внизу экрана', {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: 'Рассчитать стоимость RUB --> CNY', callback_data: 'calc' }],
-                    [{ text: 'Найти конкретный товар по наименованию и цене',callback_data: 'find_item'}],
-                    [{ text: 'Сделать заказ (зная наименование товара)',callback_data: 'offer_item'}]
+
+                ],
+                keyboard : [
+                    [{text: '✅ ОФОРМИТЬ ЗАКАЗ 👟', web_app: {url: webAppUrl}}],
+                    [{ text: 'Рассчитать RUB --> CNY'}],
                 ]
-            }
+            },
         });
 
     }
@@ -35,17 +46,17 @@ bot.on('message', async (msg) => {
         findItemFlag = false;
     }
     if (calcFlag) {
-        // Use msg.text instead of ctx.message.text
         const message = msg.text;
         const messageNumber = parseFloat(message) / 12.75;
-        // Use bot.sendMessage instead of ctx.reply
         await bot.sendMessage(chatId, messageNumber.toFixed(2) + ' CNY');
         calcFlag = false;
     }
     if(msg?.web_app_data?.data){
         try{
             const data = JSON.parse(msg?.web_app_data?.data)
-            await  bot.sendMessage(chatId, data.title)
+            await  bot.sendMessage(chatId, 'Спасибо за обратную связь')
+            await  bot.sendMessage(chatId, data?.title)
+            await  bot.sendMessage(chatId, data?.price)
         } catch (e) {
             console.log(e)
         }
@@ -74,32 +85,25 @@ app.post('/inmess', (req, res) => {
   
     console.log('Received data from the website:', { title, price });
   
-    // Process the incoming data as needed
-    // ...
-  
-    // Send a response back to the website if necessary
     res.json({ success: true });
 });
 
-bot.on('callback_query', async (msg) => {
-    const buttonData = msg.data; // Use msg.data instead of msg.callbackQuery.data
+// bot.on('callback_query', async (msg) => {
+//     const buttonData = msg.data; 
 
-    switch (buttonData) {
-        case 'calc':
-            // Use bot.sendMessage instead of ctx.reply
-            await bot.sendMessage(msg.from.id, 'Введите сумму в RUB \u2192');
-            await bot.sendMessage(msg.from.id, 'Формула здесь-->');
-            calcFlag = true;
-            break;
-        case 'find_item':
-            await bot.sendMessage(msg.from.id, 'Введите конкретное наименование товара или его стоимость');
-            findItemFlag = true;
-            break;
-        default:
-            // Handle other cases or do nothing
-            break;
-    }
+    // switch (buttonData) {
+    //     case 'calc':
+    //         await bot.sendMessage(msg.from.id, 'Введите сумму в RUB \u2192');
+    //         await bot.sendMessage(msg.from.id, 'Формула здесь-->');
+    //         calcFlag = true;
+    //         break;
+    //     case 'find_item':
+    //         await bot.sendMessage(msg.from.id, 'Введите конкретное наименование товара или его стоимость');
+    //         findItemFlag = true;
+    //         break;
+    //     default:
+    //         break;
+    // }
 
-    // Use bot.answerCallbackQuery instead of ctx.answerCbQuery
-    await bot.answerCallbackQuery(msg.id);
-});
+//     await bot.answerCallbackQuery(msg.id);
+// });
