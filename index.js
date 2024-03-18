@@ -93,6 +93,7 @@ bot.on('message', async (msg) => {
     switch (text) {
         case 'РАССЧИТАТЬ СТОИМОСТЬ':
             await bot.sendMessage(msg.from.id, 'Введите сумму в юанях \u2192');
+            await bot.sendMessage(msg.from.id, 'Например: 777')
             calcFlag = true;
             break;
 
@@ -128,7 +129,7 @@ bot.on('message', async (msg) => {
     }
 
     if (text === '/start') {
-        await bot.sendMessage(chatId, 'Привет, это Rain Zone Bot!\n\nЯ помогу подобрать одежду и рссчитать стоимость из RUB в CNY, выбери чем я могу тебе помочь!\n\nЕсли тебя интересует наш каталог товаров которые уже у нас в наличии, то жми кнопку "ОФОРМИТЬ ЗАКАЗ"\n\nЕсли ты хочешь заказать прямо с POIZON жми кнопку "РАССЧИТАТЬ СТОИМОСТЬ"\n\nЕсли у тебя еще нет POIZON, то жми "Нет POIZON / Что такое POIZON?"', {
+        await bot.sendMessage(chatId, 'Привет, это Rain Zone Bot!\n\nЯ помогу подобрать одежду и рссчитать стоимость из RUB в CNY, выбери чем я могу тебе помочь!\n\nЕсли тебя интересует наш каталог товаров которые уже у нас в наличии, то жми кнопку "ОФОРМИТЬ ЗАКАЗ"\n\nЕсли ты хочешь заказать прямо с POIZON жми кнопку "РАССЧИТАТЬ СТОИМОСТЬ"\n\nЕсли у тебя еще нет POIZON, то жми "Что такое POIZON?"', {
             reply_markup: {
                 inline_keyboard: [
 
