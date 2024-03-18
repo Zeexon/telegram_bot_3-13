@@ -26,11 +26,7 @@ const poizon_img_path = './imgs/poizon.jpg'
 
 let CNY_EXCHANGE_RATE;
 const BACKUP_EX_RATE = () => {
-    if(CNY_EXCHANGE_RATE === undefined){
-        return 12.75
-    } else {
-        return CNY_EXCHANGE_RATE
-    }
+    return 13.3
     
 } 
 
@@ -57,15 +53,29 @@ let additionalAmount = 0;
 
 function CNYCalculation(message) {
     let messageInCNY = message
-
-
-    if (messageInCNY > 200 && messageInCNY < 500) {
+    if(messageInCNY === 0){
+        additionalAmount = 0;
+    }
+    else if (messageInCNY <= 10 && messageInCNY >= 1){
+        additionalAmount = 20
+    }
+    else if(messageInCNY <= 50 && messageInCNY > 10) {
+        additionalAmount = 500
+    }
+    else if(messageInCNY <= 200 && messageInCNY > 50){
+        additionalAmount = 1500
+    }
+    else if (messageInCNY >= 200 && messageInCNY <= 500) {
         additionalAmount = 3000 
-    } else if (messageInCNY >= 500 && messageInCNY < 1000) {
-        additionalAmount = 4000 
+    } 
+    else if (messageInCNY >= 500 && messageInCNY <= 1000) {
+        additionalAmount = 3500;
+    } 
+    else if (messageInCNY > 1000){
+        additionalAmount = 3500;
     }
 
-    return (parseFloat(messageInCNY / BACKUP_EX_RATE() ) + additionalAmount) ;
+    return (parseFloat(messageInCNY * 13.3 ) + additionalAmount) ;
 }
 
 
@@ -80,7 +90,7 @@ bot.on('message', async (msg) => {
         const message = msg.text;
         const messageNumber = CNYCalculation(message)
         userCalcedPrice = messageNumber.toFixed(2) + ' рублей'
-        await bot.sendMessage(chatId, messageNumber.toFixed(2) + ' рублей');
+        await bot.sendMessage(chatId, messageNumber.toFixed(0) + ' рублей');
         setTimeout(()=>{
              bot.sendMessage(chatId, 'Для оформления заказа перейди в чат к менеджеру @vidalrain 😉\n\nТвой RainZone!')
         },500)
