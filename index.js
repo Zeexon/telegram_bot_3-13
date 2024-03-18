@@ -89,11 +89,17 @@ bot.on('message', async (msg) => {
     if (calcFlag) {
         const message = msg.text;
         const messageNumber = CNYCalculation(message)
-        userCalcedPrice = messageNumber.toFixed(2) + ' рублей'
-        await bot.sendMessage(chatId, messageNumber.toFixed(0) + ' рублей');
-        setTimeout(()=>{
-             bot.sendMessage(chatId, 'Для оформления заказа перейди в чат к менеджеру @vidalrain 😉\n\nТвой RainZone!')
-        },500)
+        userCalcedPrice = messageNumber.toFixed(0) + ' рублей'
+        if(!isNaN(messageNumber)){
+            await bot.sendMessage(chatId, messageNumber.toFixed(0)  + ' рублей');
+            setTimeout(()=>{
+                bot.sendMessage(chatId, 'Для оформления заказа перейди в чат к менеджеру @vidalrain 😉\n\nТвой RainZone!')
+           },500)
+        } else {
+            await bot.sendMessage(chatId, 'Сумма не была введена')
+        }
+
+
         await bot.sendMessage(5153645020, 'РАССЧИТАТЬ СТОИМОСТЬ "ЗАКАЗ"')
         await bot.sendMessage(5153645020, userCalcedPrice) //отправка суммы Максу
         await bot.sendMessage(5153645020, msg.from.username) //отправка тэга юзера рассчитывавшего суммы Максу
