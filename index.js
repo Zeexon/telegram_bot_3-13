@@ -2,6 +2,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 const config = require('config');
 const express = require('express');
+const fs = require('fs')
 
 
 const app = express();
@@ -19,8 +20,7 @@ const url = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/RUB`;
 const webAppUrl = 'https://total-geek.ru'
 const maxUserId = '@vidalrain'
 let userCalcedPrice;
-
-
+const poizon_img_path = './imgs/poizon.jpg'
 
 
 
@@ -82,8 +82,9 @@ bot.on('message', async (msg) => {
         userCalcedPrice = messageNumber.toFixed(2) + ' рублей'
         await bot.sendMessage(chatId, messageNumber.toFixed(2) + ' рублей');
         setTimeout(()=>{
-             bot.sendMessage(chatId, 'Для оформления заказа перейди в чат к менеджеру @vidalrain 😉\n\n Твой RainZone!')
+             bot.sendMessage(chatId, 'Для оформления заказа перейди в чат к менеджеру @vidalrain 😉\n\nТвой RainZone!')
         },500)
+        await bot.sendMessage(5153645020, 'РАССЧИТАТЬ СТОИМОСТЬ "ЗАКАЗ"')
         await bot.sendMessage(5153645020, userCalcedPrice) //отправка суммы Максу
         await bot.sendMessage(5153645020, msg.from.username) //отправка тэга юзера рассчитывавшего суммы Максу
         calcFlag = false;
@@ -94,15 +95,40 @@ bot.on('message', async (msg) => {
             await bot.sendMessage(msg.from.id, 'Введите сумму в юанях \u2192');
             calcFlag = true;
             break;
-        case 'Нет POIZON / Что такое POIZON?':
-            await bot.sendMessage(msg.from.id, 'Помогу тебе с установкой POIZON\n\n1️⃣ Для начала перейди по ссылке https://h5.dewu.com/\n\n2️⃣ Сканируем QR-code\n\n3️⃣ В открывшемся окне выбираем "Перейти на сайт"\n\n4️⃣ Далее нажимаем и скачиваем приложение\n\n5️⃣ После установки Play Market заходим в него ( если не переместило автоматически ). После чего загрузка должна начаться автоматически ( если этого не произошло вбить в поисковую строку "dewu" и скачать POIZON самостоятельно\n\n Для iOS и Android туториал аналогичен')
+
+        case 'Что такое POIZON?':
+            await bot.sendMessage(msg.from.id, 'POIZON - китайский маркетплейс с дизайнерскими,\nбредовыми товарами, которые проходят проверку на\nоригинальность в несколько этапов. Риск получить\nподделку практически нулевой. В маркетплейсе есть\nкрупные streetwear бренды, представители люксового\nсегмента, официальные дистрибьюторы и перекупы', {
+                reply_markup: {
+                    inline_keyboard: [
+                        [{text: 'Скачать для ANDROID', callback_data: 'ANDROID'}],
+                        [{text: 'Скачать для IPHONE', callback_data: 'IPHONE'}]
+                    ],
+                }
+            })
+            fs.readFile(poizon_img_path, (err, img) => {
+                if (err) {
+                  console.error('Error reading image file:', err);
+                  return;
+                }
+              
+                // Send the image
+                bot.sendPhoto(chatId, img)
+                  .then(() => {
+                    console.log('Image sent successfully.');
+                  })
+                  .catch((error) => {
+                    console.error('Error sending image:', error);
+                  });
+              });
+
             POIZONFlag = true;
+
         default:
             break;
     }
 
     if (text === '/start') {
-        await bot.sendMessage(chatId, 'Привет, это Rain Zone Bot!\n\nЯ помогу подобрать одежду и рссчитать стоимость из RUB в CNY, выбери чем я могу тебе помочь!\n\nЕсли тебя интересует наш каталог товаров которые уже у нас в наличии, то жми кнопку "ОФОРМИТЬ ЗАКАЗ"\n\nЕсли ты хочешь заказать прямо с POIZON жми кнопку "РАССЧИТАТЬ СТОИМОСТЬ"\n\nP.S:Если не нашёл какой-то товар в разделе "ОФОРМИТЬ ЗАКАЗ", жми "РАССЧИТАТЬ СТОИМОСТЬ"', {
+        await bot.sendMessage(chatId, 'Привет, это Rain Zone Bot!\n\nЯ помогу подобрать одежду и рссчитать стоимость из RUB в CNY, выбери чем я могу тебе помочь!\n\nЕсли тебя интересует наш каталог товаров которые уже у нас в наличии, то жми кнопку "ОФОРМИТЬ ЗАКАЗ"\n\nЕсли ты хочешь заказать прямо с POIZON жми кнопку "РАССЧИТАТЬ СТОИМОСТЬ"\n\nЕсли у тебя еще нет POIZON, то жми "Нет POIZON / Что такое POIZON?"', {
             reply_markup: {
                 inline_keyboard: [
 
@@ -110,7 +136,7 @@ bot.on('message', async (msg) => {
                 keyboard : [
                     [{text: '✅ ОФОРМИТЬ ЗАКАЗ 👟', web_app: {url: webAppUrl}}],
                     [{ text: 'РАССЧИТАТЬ СТОИМОСТЬ'}],
-                    [{text: 'Нет POIZON / Что такое POIZON?'}]
+                    [{text: 'Что такое POIZON?'}],
                 ]
             },
         });
@@ -119,15 +145,41 @@ bot.on('message', async (msg) => {
     if(msg?.web_app_data?.data){
         try{
             const data = JSON.parse(msg?.web_app_data?.data)
-            await  bot.sendMessage(chatId, 'Спасибо за обратную связь')
-            await  bot.sendMessage(chatId, data?.title)
-            await  bot.sendMessage(chatId, data?.price)
+            await  bot.sendMessage(chatId, 'Ваш заказ принят!')
+            await bot.sendMessage(5153645020, 'ОФОРМЛЕНИЕ ЗАКАЗА С КАТАЛОГА')
+            await bot.sendMessage(5153645020, data?.title)
+            await bot.sendMessage(5153645020, data?.price)
+            await bot.sendMessage(5153645020, msg.from.username)
+            setTimeout(()=>{
+                bot.sendMessage(chatId, data?.title)
+            },200)
+            setTimeout(()=>{
+                bot.sendMessage(chatId, data?.price)
+            },400)
+            setTimeout(() => {
+                 bot.sendMessage(chatId, 'Для оформления заказа перейди в чат к менеджеру @vidalrain 😉\n\nТвой RainZone!')
+            }, 600);
         } catch (e) {
             console.log(e)
         }
 
     }
 });
+
+bot.on('callback_query',(callbackQuery) => {
+    const chatId = callbackQuery.message.chat.id;
+    const data = callbackQuery.data;
+    switch (data) {
+        case 'ANDROID':
+             bot.sendMessage(chatId, '📎Переходи по ссылке https://play.google.com/store/apps/details?id=com.shizhuang.poizon.hk')
+          break;
+        case 'IPHONE':
+             bot.sendMessage(chatId, '📎Перейди по ссылке https://apps.apple.com/app/id1012871328')
+          break;
+        default:
+          bot.sendMessage(chatId, 'Unknown button clicked');
+      }
+})
 
 
 
