@@ -65,7 +65,7 @@ function CNYCalculation(message) {
     else if(messageInCNY <= 200 && messageInCNY > 50){
         additionalAmount = 1500
     }
-    else if (messageInCNY >= 200 && messageInCNY <= 500) {
+    else if (messageInCNY >= 200 && messageInCNY < 500) {
         additionalAmount = 3000 
     } 
     else if (messageInCNY >= 500 && messageInCNY <= 1000) {
