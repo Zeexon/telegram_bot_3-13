@@ -2,8 +2,9 @@
 const TelegramBot = require('node-telegram-bot-api');
 const config = require('config');
 const express = require('express');
-const fs = require('fs')
-
+const fs = require('fs');
+const notion = require('./notion.js');
+const namesData = notion.dbData
 
 const app = express();
 const port = 3000;
@@ -29,6 +30,11 @@ const BACKUP_EX_RATE = () => {
     return 13.3
     
 } 
+
+
+function generateRefferalCode(){
+    return Math.random().toString(36).substr(2,6)
+}
 
 
 axios.get(url)
@@ -78,6 +84,30 @@ function CNYCalculation(message) {
     return (parseFloat(messageInCNY * 13.3 ) + additionalAmount) ;
 }
 
+bot.onText(/\/start(.+)?/, (msg, match) => {
+    const referralCode = match ? match[1] : null; // Check if match exists before accessing match[1]
+    const chatId = msg.chat.id;
+
+    bot.sendMessage(chatId, 'Привет, это Rain Zone Bot!\n\nЯ помогу подобрать одежду и рссчитать стоимость из RUB в CNY, выбери чем я могу тебе помочь!\n\nЕсли тебя интересует наш каталог товаров которые уже у нас в наличии, то жми кнопку "ОФОРМИТЬ ЗАКАЗ"\n\nЕсли ты хочешь заказать прямо с POIZON жми кнопку "РАССЧИТАТЬ СТОИМОСТЬ"\n\nЕсли у тебя еще нет POIZON, то жми "Что такое POIZON?"', {
+        reply_markup: {
+            keyboard : [
+                [{text: '✅ ОФОРМИТЬ ЗАКАЗ 👟', web_app: {url: webAppUrl}}],
+                [{ text: 'РАССЧИТАТЬ СТОИМОСТЬ'}],
+                [{text: 'Что такое POIZON?'}],
+            ]
+        },
+    });
+
+    // bot.sendMessage(chatId, 'Хочешь получить скидку? Пригласи друзей', {
+    //     reply_markup: {
+    //         inline_keyboard: [
+    //             [{ text: 'Ссылка для приглашения',  callback_data: 'invite-link'}],
+    //         ],
+    //     }
+    // });
+});
+
+
 
 
 bot.on('message', async (msg) => {
@@ -85,6 +115,14 @@ bot.on('message', async (msg) => {
     const text = msg.text;
 
     console.log('Received message from chat:', chatId);
+
+    if(msg.text === 'getdata'){
+        await notion.getData()
+        let dataBotReplyArr = []
+        namesData.map(item => dataBotReplyArr.push(item))
+        const joinedString = dataBotReplyArr.join(' ')
+        await bot.sendMessage(1147005801, joinedString)
+    }
 
     if (calcFlag) {
         const message = msg.text;
@@ -98,11 +136,19 @@ bot.on('message', async (msg) => {
         } else {
             await bot.sendMessage(chatId, 'Сумма не была введена')
         }
+        
 
 
         await bot.sendMessage(5153645020, 'РАССЧИТАТЬ СТОИМОСТЬ "ЗАКАЗ"')
         await bot.sendMessage(5153645020, userCalcedPrice) //отправка суммы Максу
         await bot.sendMessage(5153645020, msg.from.username) //отправка тэга юзера рассчитывавшего суммы Максу
+        try {
+            const userTag = msg.from.username
+            const notionResponse = await notion.create(userTag);
+            await bot.sendMessage(1147005801, notionResponse.url)
+        } catch(e){
+            console.log('Error pushing data into database:', e)
+        }
         calcFlag = false;
     }
 
@@ -112,7 +158,6 @@ bot.on('message', async (msg) => {
             await bot.sendMessage(msg.from.id, 'Например: 777')
             calcFlag = true;
             break;
-
         case 'Что такое POIZON?':
             await bot.sendMessage(msg.from.id, 'POIZON - китайский маркетплейс с дизайнерскими,\nбредовыми товарами, которые проходят проверку на\nоригинальность в несколько этапов. Риск получить\nподделку практически нулевой. В маркетплейсе есть\nкрупные streetwear бренды, представители люксового\nсегмента, официальные дистрибьюторы и перекупы', {
                 reply_markup: {
@@ -144,21 +189,7 @@ bot.on('message', async (msg) => {
             break;
     }
 
-    if (text === '/start') {
-        await bot.sendMessage(chatId, 'Привет, это Rain Zone Bot!\n\nЯ помогу подобрать одежду и рссчитать стоимость из RUB в CNY, выбери чем я могу тебе помочь!\n\nЕсли тебя интересует наш каталог товаров которые уже у нас в наличии, то жми кнопку "ОФОРМИТЬ ЗАКАЗ"\n\nЕсли ты хочешь заказать прямо с POIZON жми кнопку "РАССЧИТАТЬ СТОИМОСТЬ"\n\nЕсли у тебя еще нет POIZON, то жми "Что такое POIZON?"', {
-            reply_markup: {
-                inline_keyboard: [
 
-                ],
-                keyboard : [
-                    [{text: '✅ ОФОРМИТЬ ЗАКАЗ 👟', web_app: {url: webAppUrl}}],
-                    [{ text: 'РАССЧИТАТЬ СТОИМОСТЬ'}],
-                    [{text: 'Что такое POIZON?'}],
-                ]
-            },
-        });
-
-    }
     if(msg?.web_app_data?.data){
         try{
             const data = JSON.parse(msg?.web_app_data?.data)
@@ -187,16 +218,18 @@ bot.on('callback_query',(callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
     const data = callbackQuery.data;
     switch (data) {
-        case 'ANDROID':
-             bot.sendMessage(chatId, '📎Переходи по ссылке https://play.google.com/store/apps/details?id=com.shizhuang.poizon.hk')
-          break;
-        case 'IPHONE':
-             bot.sendMessage(chatId, '📎Перейди по ссылке https://apps.apple.com/app/id1012871328')
-          break;
+        case 'invite-link':
+            bot.sendMessage(chatId, 'In process')
+            break
         default:
           bot.sendMessage(chatId, 'Unknown button clicked');
       }
 })
+
+
+
+
+
 
 
 
