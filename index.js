@@ -121,7 +121,7 @@ bot.on('message', async (msg) => {
         let dataBotReplyArr = []
         namesData.map(item => dataBotReplyArr.push(item))
         const joinedString = dataBotReplyArr.join(' ')
-        await bot.sendMessage(1147005801, joinedString)
+        await bot.sendMessage(chatId, joinedString)
     }
 
     if (calcFlag) {
